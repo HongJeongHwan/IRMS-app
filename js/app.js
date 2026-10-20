@@ -768,8 +768,14 @@ function renderPhotos() {
       h('button', { type: 'button', class: 'thumb-del', onclick: () => removePhoto(p.no), 'aria-label': `사진 ${p.no} 지우기` }, h('span', {}, '×')),
       h('span', { class: 'thumb-cap' }, `사진 ${p.no}` + (p.error ? ' · 못 읽음' : p.engine === 'gemini' ? ` · ${p.readings.length}줄` : ''))))) : null);
   const disabled = S.view.blocked;
-  $('photoCamera').disabled = disabled;
-  $('photoPick').disabled = disabled;
+  // REQ-896: 막힌 동안 [사진 찍기]·[사진 고르기]는 눌리지 않게 보인다(안드로이드와 같게) — 감싼 파일 칸은 disabled, 단추 모양은 is-disabled.
+  for (const id of ['photoCamera', 'photoPick']) {
+    const input = $(id);
+    input.disabled = disabled;
+    const label = input.closest('label');
+    label.classList.toggle('is-disabled', disabled);
+    label.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+  }
 }
 
 // ── 줄 ────────────────────────────────────────────────────────────────────────

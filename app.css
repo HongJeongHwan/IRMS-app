@@ -97,6 +97,8 @@ select.input { appearance: none; -webkit-appearance: none; background-image: lin
 }
 .btn:active { background: var(--c-primary-weak); }
 .btn:disabled { opacity: .45; cursor: default; }
+/* REQ-896: 파일 칸을 감싼 단추(label)도 막히면 같은 모양으로 — 누를 수 없음 */
+.file-btn.is-disabled, .file-btn:has(input:disabled) { opacity: .45; cursor: default; pointer-events: none; }
 .btn-primary { background: var(--c-primary); color: #fff; }
 .btn-primary:active { background: #163d70; }
 .btn-danger { border-color: var(--c-bad); color: var(--c-bad); }
