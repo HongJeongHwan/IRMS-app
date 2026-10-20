@@ -1,11 +1,11 @@
 // REQ-875 서비스 워커 — 앱 파일을 미리 받아 두어 현장(인터넷이 약한 곳)에서도 열리게 한다.
 // 새 버전을 올리면 VERSION 이 바뀌어 새 워커가 「대기」 → 화면 띠 「새 버전이 있습니다 [새로 고침]」 → SKIP_WAITING → 다시 열림.
 // 당첨 자료(data/)와 제미나이는 캐시하지 않는다(늘 네트워크, 자료는 앱이 IndexedDB 에 암호문으로 둔다).
-const VERSION = '1.2.0';
+const VERSION = '1.2.1';
 const CACHE = `irms-wincheck-${VERSION}`;
 const FILES = [
   './', './index.html', './app.css', './manifest.webmanifest',
-  './js/app.js', './js/config.js', './js/crypto.js', './js/wins.js', './js/binding.js', './js/gemini.js', './js/db.js', './js/records.js', './js/zip.js',
+  './js/app.js', './js/config.js', './js/crypto.js', './js/wins.js', './js/binding.js', './js/gemini.js', './js/db.js', './js/records.js', './js/zip.js', './js/device.js',
   './vendor/jsQR.js', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
 ];
 

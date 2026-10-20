@@ -8,6 +8,7 @@ import * as B from './binding.js';
 import * as G from './gemini.js';
 import * as DB from './db.js';
 import * as R from './records.js';
+import * as D from './device.js';
 import { VERSION, VERSION_CODE, DATA_BASE, SERVER_PUBLIC_KEY_BASE64, RECORD_PUBLIC_KEY_BASE64 } from './config.js';
 
 const $ = (id) => document.getElementById(id);
@@ -51,6 +52,9 @@ const S = {
   readingPhoto: false,
   logEntries: [],
   swReg: null,
+  deviceKey: null,     // REQ-896 {privateKey, publicKey, spki, fp, code}
+  deviceKeyError: null,
+  activation: null,    // 확인한 등록 QR JSON {u,c,d,e,i,n}
 };
 
 // ── 작은 도구 ──────────────────────────────────────────────────────────────────
@@ -113,6 +117,10 @@ function verdictBadge(verdict) {
 async function evaluateBinding() {
   const now = nowSec();
   S.view = B.bindingView(S.binding, now, S.lastSeen);
+  // REQ-896: 사용자 연결이 살아 있어도 이 휴대폰이 등록(등록 QR)되지 않았거나 등록 기간이 지났으면 잠근다.
+  const a = S.activation;
+  const registered = a && S.binding && S.deviceKey && a.u === S.binding.userId && a.c === S.deviceKey.code && a.e > now;
+  if (!S.view.blocked && !registered) S.view = { ...S.view, blocked: true, warning: true, needDevice: true, notice: D.LOCK_TITLE };
   if (S.view.notice !== B.CLOCK_NOTICE && now > S.lastSeen) {
     S.lastSeen = now;
     try { await DB.kvSet('lastSeen', now); } catch { /* 저장 못 해도 계속 */ }
@@ -122,12 +130,64 @@ async function evaluateBinding() {
 function renderUser() {
   const v = S.view;
   const buttons = h('div', { class: 'btn-row' },
-    h('button', { type: 'button', class: S.binding ? 'btn btn-small' : 'btn btn-primary', onclick: openScanner }, S.binding ? '사용자 바꾸기' : '열쇠 QR 찍기'));
+    h('button', { type: 'button', class: S.binding ? 'btn btn-small' : 'btn btn-primary', onclick: () => openScanner() }, S.binding ? '사용자 바꾸기' : '열쇠 QR 찍기'));
   const cls = v.blocked ? 'card card-bad' : v.warning ? 'card card-warn' : 'card';
   mount('userCard', h('section', { class: cls },
     v.label ? h('div', { class: 'user-line' }, h('span', { class: 'user-name' }, v.label), h('span', { class: 'user-until' }, v.until)) : null,
-    v.notice ? h('p', { class: `notice ${v.blocked ? 'bad' : 'warn'}` }, v.notice) : null,
-    buttons));
+    v.needDevice ? deviceLockBlock() : v.notice ? h('p', { class: `notice ${v.blocked ? 'bad' : 'warn'}` }, v.notice) : null,
+    v.needDevice ? null : buttons));
+}
+
+// ── 휴대폰 등록(REQ-896) ───────────────────────────────────────────────────────
+function deviceLockBlock() {
+  return h('div', { class: 'device-lock' },
+    h('h2', { class: 'card-title' }, D.LOCK_TITLE),
+    h('p', { class: 'hint' }, D.LOCK_TEXT),
+    h('div', { class: 'field-label' }, '기기 확인 번호'),
+    S.deviceKey ? h('p', { class: 'device-code', 'aria-label': '기기 확인 번호' }, D.formatCode(S.deviceKey.code))
+      : h('p', { class: 'notice bad' }, S.deviceKeyError || '기기 열쇠를 만들지 못했습니다. iOS 16.4 이상 Safari 홈 화면 웹앱에서 열어 주세요.'),
+    h('div', { class: 'btn-row' },
+      h('button', { type: 'button', class: 'btn btn-primary', disabled: !S.deviceKey, onclick: () => openScanner('device') }, '등록 QR 찍기'),
+      h('button', { type: 'button', class: 'btn btn-small', onclick: () => openScanner() }, '열쇠 QR 다시 찍기')));
+}
+
+const deviceStore = { get: (k) => DB.get('keys', k), put: (k, v) => DB.put('keys', k, v) };
+
+/** 저장한 등록 QR 을 다시 확인(서명·사용자·번호·만료). 틀리면 S.activation = null(잠김). */
+async function loadActivation() {
+  S.activation = null;
+  const payload = await DB.kvGet(D.ACTIVATION_KV);
+  if (!payload || !S.binding || !S.deviceKey) return;
+  try {
+    S.activation = await D.openActivation(payload, S.pub, { userId: S.binding.userId, code: S.deviceKey.code, now: nowSec() });
+  } catch { S.activation = null; }
+}
+
+function activationError(message) {
+  showModal('등록 QR', h('p', { class: 'error-text' }, message),
+    h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: () => { closeModal(); openScanner('device'); } }, '다시 찍기'),
+      h('button', { type: 'button', class: 'btn', onclick: closeModal }, '닫기')));
+}
+
+async function onActivationText(text) {
+  if (!S.binding) { activationError(B.FIRST_NOTICE); return; }
+  if (!S.deviceKey) { activationError(S.deviceKeyError || '기기 열쇠가 없어 등록할 수 없습니다.'); return; }
+  let data;
+  try {
+    data = await D.openActivation(text, S.pub, { userId: S.binding.userId, code: S.deviceKey.code, now: nowSec() });
+  } catch (e) {
+    activationError(e instanceof D.DeviceError ? e.message : D.NOT_IRMS);
+    return;
+  }
+  await DB.kvSet(D.ACTIVATION_KV, String(text).trim());
+  S.activation = data;
+  closeModal();
+  await evaluateBinding();
+  S.dataNotice = '휴대폰을 등록했습니다.';
+  S.dataNoticeError = false;
+  await loadStoredWins();
+  renderAll();
+  if (!S.data && !S.view.blocked) downloadWins();
 }
 
 // ── 당첨 자료 ──────────────────────────────────────────────────────────────────
@@ -234,19 +294,20 @@ async function downloadWins() {
 }
 
 // ── 자료 열쇠 QR ───────────────────────────────────────────────────────────────
-function openScanner() {
+function openScanner(mode = 'key') {
+  const device = mode === 'device';
   let stream = null;
   let stopped = false;
   const video = h('video', { class: 'scan-video', playsinline: true, muted: true, autoplay: true });
   video.muted = true;
-  const status = h('p', { class: 'hint' }, 'PC 화면의 자료 열쇠 QR을 네모 안에 맞춰 주세요.');
+  const status = h('p', { class: 'hint' }, device ? 'PC 화면의 등록 QR을 네모 안에 맞춰 주세요.' : 'PC 화면의 자료 열쇠 QR을 네모 안에 맞춰 주세요.');
   const error = h('p', { class: 'error-text', role: 'alert' });
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const stop = () => { stopped = true; if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; };
   modalCleanup = stop;
 
-  const pasteArea = h('textarea', { class: 'input', placeholder: 'irmskey:v2:… (QR을 찍을 수 없을 때 글자를 붙여 넣기)' });
+  const pasteArea = h('textarea', { class: 'input', placeholder: `${device ? 'irmsdev:v1' : 'irmskey:v2'}:… (QR을 찍을 수 없을 때 글자를 붙여 넣기)` });
   const photoInput = h('input', { type: 'file', accept: 'image/*', capture: 'environment', hidden: true, onchange: async () => {
     const file = photoInput.files[0];
     photoInput.value = '';
@@ -256,7 +317,7 @@ function openScanner() {
     if (text) { stop(); onQrText(text); } else { error.textContent = '사진에서 QR을 찾지 못했습니다. QR이 화면 가운데에 크게 나오게 다시 찍어 주세요.'; status.textContent = ''; }
   } });
 
-  showModal('자료 열쇠 QR 찍기',
+  showModal(device ? '등록 QR 찍기' : '자료 열쇠 QR 찍기',
     h('div', { class: 'scan-wrap' }, video, h('div', { class: 'scan-frame' })),
     status, error,
     h('div', { class: 'btn-row' },
@@ -312,6 +373,7 @@ async function decodeQrFromFile(file) {
 }
 
 async function onQrText(text) {
+  if (D.looksLikeActivation(text)) { await onActivationText(text); return; }
   if (!C.looksLikeKeyQr(text)) {
     showModal('자료 열쇠 QR', h('p', { class: 'error-text' }, '자료 열쇠 QR이 아닙니다. PC 「모바일 앱 › 앱 설치」의 [열쇠 QR 보이기]로 나온 QR을 찍어 주세요.'),
       h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: () => { closeModal(); openScanner(); } }, '다시 찍기'),
@@ -339,6 +401,9 @@ async function onQrText(text) {
     try {
       const opened = await C.openKeyQr(text, pin.value.trim(), S.pub, nowSec());
       await DB.put('keys', opened.keyId, opened.key);
+      // REQ-896: 열쇠 QR 을 새로 찍으면 등록 QR 을 다시 찍어야 한다.
+      await DB.del('kv', D.ACTIVATION_KV);
+      S.activation = null;
       if (opened.user) {
         S.binding = opened.user;
         await DB.kvSet('binding', C.bindingToCompact(opened.user));
@@ -959,7 +1024,7 @@ async function exportLog() {
   }
   let bundle;
   try {
-    bundle = await R.buildSealedBundle({ entries, remaining, device: S.device, app: appInfo(), user: S.binding ? B.bindingRecordJson(S.binding, nowSec()) : null, now: Date.now() }, RECORD_PUBLIC_KEY_BASE64);
+    bundle = await R.buildSealedBundle({ entries, remaining, device: S.device, app: appInfo(), user: S.binding ? B.bindingRecordJson(S.binding, nowSec()) : null, now: Date.now() }, RECORD_PUBLIC_KEY_BASE64, {}, S.deviceKey);
   } catch (e) {
     toast(e && e.message === R.NO_RECORD_KEY ? R.NO_RECORD_KEY : `기록을 암호화하지 못해 보내지 않았습니다: ${(e && e.message) || e}`);
     return;
@@ -1048,6 +1113,8 @@ function renderSettings() {
       h('dl', { class: 'kv' }, h('dt', {}, '버전'), h('dd', {}, `웹앱 ${VERSION}`),
         h('dt', {}, '설치'), h('dd', {}, standalone ? '홈 화면에 설치됨' : '아직 홈 화면에 추가하지 않음'),
         h('dt', {}, '기기 기록 id'), h('dd', {}, S.device || '-'),
+        h('dt', {}, '기기 확인 번호'), h('dd', { class: 'device-code-small' }, S.deviceKey ? D.formatCode(S.deviceKey.code) : '없음'),
+        h('dt', {}, '휴대폰 등록'), h('dd', {}, S.activation ? `등록됨 · ~${B.seoulDate(S.activation.e)}까지` : '등록 안 됨'),
         h('dt', {}, '당첨 자료'), h('dd', {}, S.winsMeta ? `${S.winsMeta.label} · 열쇠 ${S.winsMeta.keyId}` : '없음')),
       h('div', { class: 'btn-row' }, h('button', { type: 'button', class: 'btn', onclick: checkUpdate }, '새 버전 확인')),
       !standalone ? h('p', { class: 'notice warn' }, 'Safari 아래 [공유] 단추 → [홈 화면에 추가]로 설치해 주세요. 설치하지 않으면 아이폰이 이 웹앱의 자료(열쇠·당첨 자료·기록)를 지울 수 있습니다.') : null));
@@ -1162,6 +1229,13 @@ async function init() {
   const compact = await DB.kvGet('binding');
   if (compact) { try { S.binding = C.bindingFromCompact(compact); } catch { S.binding = null; } }
   S.lastSeen = await DB.kvGet('lastSeen', 0);
+  try {
+    S.deviceKey = await D.ensureDeviceKey(deviceStore);
+  } catch (e) {
+    S.deviceKey = null;
+    S.deviceKeyError = `기기 열쇠를 만들지 못했습니다(${(e && e.message) || e}). iOS 16.4 이상 Safari 홈 화면 웹앱에서 열어 주세요.`;
+  }
+  await loadActivation();
   await evaluateBinding();
   await loadGemini();
   await loadStoredWins();

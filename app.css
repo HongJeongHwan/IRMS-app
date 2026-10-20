@@ -161,6 +161,12 @@ select.input { appearance: none; -webkit-appearance: none; background-image: lin
 .user-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .user-name { font-weight: 700; }
 .user-until { font-size: var(--fs-s); color: var(--c-muted); }
+/* REQ-896 휴대폰 등록 카드 */
+.device-lock { margin-top: 10px; padding-top: 10px; border-top: 1px solid #f2c4bf; }
+.device-lock .field-label { margin-top: 12px; }
+.device-code { margin: 10px 0 0; padding: 10px 12px; background: var(--c-card); border: 1px solid var(--c-line); border-radius: var(--radius);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: var(--fs-xl); font-weight: 700; letter-spacing: 0.12em; text-align: center; color: var(--c-text); }
+.device-code-small { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: 0.06em; }
 
 .list { list-style: none; margin: 8px 0 0; padding: 0; }
 .list li { padding: 10px 0; border-top: 1px solid var(--c-line); font-size: var(--fs-s); }
