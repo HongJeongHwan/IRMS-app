@@ -344,3 +344,69 @@ export async function verifyWinsFile(fileBytes, publicKey) {
   if (packageId !== (await computePackageId(wins))) throw new Error('당첨 자료 package_id가 내용과 일치하지 않습니다.');
   return wins;
 }
+
+// ── 기록 봉투(REQ-889) — [기록 보내기] 묶음을 IRMS 기록 공개키로 싼다(IRMS 만 연다) ─────────────
+// 서버 modules/common/record_envelope.py · 안드로이드와 같은 바이트 규칙:
+//   "IRMSREC1"(8) · 머리 길이(4, 빅엔디언) · 머리 JSON(UTF-8) · AES-256-GCM 암호문‖태그(16)
+//   열쇠 = HKDF-SHA256(ECDH x 좌표 32바이트, salt = 임시 공개키 65바이트, info = "irms-record-v1"), AAD = 봉투 앞부분 전부.
+export const RECORD_MAGIC = 'IRMSREC1';
+export const RECORD_ALG = 'ECDH-P256/HKDF-SHA256/AES-256-GCM';
+export const RECORD_INNER_NAME = 'irms-record.irmsrec';
+const RECORD_INFO = 'irms-record-v1';
+const ECDH_P256 = { name: 'ECDH', namedCurve: 'P-256' };
+
+export function b64Encode(bytes) {
+  const b = new Uint8Array(bytes);
+  let bin = '';
+  for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+/** 기록 공개키 id = SPKI DER SHA-256 앞 16 hex(서버 record_envelope.key_id 와 같다). */
+export async function recordKeyId(spkiBase64) {
+  return (await sha256Hex(b64Decode(spkiBase64))).slice(0, 16);
+}
+
+/**
+ * 묶음 zip(평문) → 기록 봉투 바이트. meta = {user: IRMS 사용자 id(정수) 또는 null, created: ISO 시각, name: 보내는 파일 이름}.
+ * [ephemeralJwk]·[iv] 는 시험에서만 고정한다 — 평소에는 매번 새 임시 열쇠와 IV.
+ */
+export async function sealRecord(plaintext, recipientSpkiB64, { user = null, created = '', name = '' } = {}, { ephemeralJwk = null, iv = null } = {}) {
+  if (!recipientSpkiB64) throw new Error('기록 암호화 공개키가 없습니다.');
+  const spki = b64Decode(recipientSpkiB64);
+  const recipient = await subtle.importKey('spki', spki, ECDH_P256, false, []);
+  let priv;
+  let epk;
+  if (ephemeralJwk) {
+    priv = await subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', x: ephemeralJwk.x, y: ephemeralJwk.y, d: ephemeralJwk.d }, ECDH_P256, false, ['deriveBits']);
+    epk = new Uint8Array(65);
+    epk[0] = 4;
+    epk.set(b64urlDecode(ephemeralJwk.x), 1);
+    epk.set(b64urlDecode(ephemeralJwk.y), 33);
+  } else {
+    const pair = await subtle.generateKey(ECDH_P256, false, ['deriveBits']);
+    priv = pair.privateKey;
+    epk = new Uint8Array(await subtle.exportKey('raw', pair.publicKey));
+  }
+  if (epk.length !== 65 || epk[0] !== 4) throw new Error('임시 공개키 형식이 올바르지 않습니다.');
+  const nonce = iv ? new Uint8Array(iv) : globalThis.crypto.getRandomValues(new Uint8Array(NONCE_SIZE));
+  if (nonce.length !== NONCE_SIZE) throw new Error('IV 길이가 올바르지 않습니다.');
+  const userId = Number.isInteger(user) ? user : null;
+  const header = { v: 1, alg: RECORD_ALG, kid: (await sha256Hex(spki)).slice(0, 16), epk: b64Encode(epk), iv: b64Encode(nonce),
+    user: userId, created: String(created || ''), name: String(name || '') };
+  const head = utf8(JSON.stringify(header));
+  const magic = utf8(RECORD_MAGIC);
+  const prefix = new Uint8Array(magic.length + 4 + head.length);
+  prefix.set(magic, 0);
+  new DataView(prefix.buffer).setUint32(magic.length, head.length, false);
+  prefix.set(head, magic.length + 4);
+  const shared = await subtle.deriveBits({ name: 'ECDH', public: recipient }, priv, 256);
+  const base = await subtle.importKey('raw', shared, 'HKDF', false, ['deriveKey']);
+  const key = await subtle.deriveKey({ name: 'HKDF', hash: 'SHA-256', salt: epk, info: utf8(RECORD_INFO) }, base,
+    { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+  const sealed = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv: nonce, additionalData: prefix, tagLength: 128 }, key, plaintext));
+  const out = new Uint8Array(prefix.length + sealed.length);
+  out.set(prefix, 0);
+  out.set(sealed, prefix.length);
+  return out;
+}

@@ -2,6 +2,7 @@
 // import_winlog.py(대시보드 [기록 파일 올리기])가 그대로 받는다. 위치정보는 넣지 않고 사진은 다시 그려 EXIF 를 버린다.
 
 import { buildZip } from './zip.js';
+import { sealRecord, RECORD_INNER_NAME } from './crypto.js';
 
 export const FORMAT = 'irms-wins-log';
 export const LOG_VERSION = 1;
@@ -101,6 +102,21 @@ export function buildBundle({ entries, remaining, device, app, user, now }) {
     }
   }
   return { name: `${BUNDLE_PREFIX}${device}-${stamp(now)}.zip`, bytes: buildZip(files, new Date(now)) };
+}
+
+export const NO_RECORD_KEY = '기록 암호화 공개키가 웹앱 설정에 없어 보낼 수 없습니다. IRMS 담당자에게 웹앱 새 버전을 올려 달라고 해 주세요.';
+
+/**
+ * 보내는 파일(REQ-889) — buildBundle 의 묶음 zip 을 IRMS 기록 공개키로 싼 봉투를, 봉투 한 개만 저장한 zip 에 넣는다.
+ * 이름은 묶음과 같다(IRMS-wins-log-<기기>-<시각>.zip). 평문 묶음은 밖으로 내보내지 않는다.
+ * [fixed] = {ephemeralJwk, iv} 는 시험에서만.
+ */
+export async function buildSealedBundle(args, recordPublicKeyB64, fixed = {}) {
+  if (!recordPublicKeyB64) throw new Error(NO_RECORD_KEY);
+  const plain = buildBundle(args);
+  const user = args.user && Number.isInteger(args.user.id) ? args.user.id : null;
+  const envelope = await sealRecord(plain.bytes, recordPublicKeyB64, { user, created: isoLocal(args.now), name: plain.name }, fixed);
+  return { name: plain.name, bytes: buildZip([{ name: RECORD_INNER_NAME, data: envelope }], new Date(args.now)) };
 }
 
 /** 한도(최근 200건)를 넘으면 보낸 기록부터 오래된 차례로 지울 id 목록(방금 쓴 한 건은 남김). */

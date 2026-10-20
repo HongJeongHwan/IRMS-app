@@ -8,7 +8,7 @@ import * as B from './binding.js';
 import * as G from './gemini.js';
 import * as DB from './db.js';
 import * as R from './records.js';
-import { VERSION, VERSION_CODE, DATA_BASE, SERVER_PUBLIC_KEY_BASE64 } from './config.js';
+import { VERSION, VERSION_CODE, DATA_BASE, SERVER_PUBLIC_KEY_BASE64, RECORD_PUBLIC_KEY_BASE64 } from './config.js';
 
 const $ = (id) => document.getElementById(id);
 const nowSec = () => Math.floor(Date.now() / 1000);
@@ -939,7 +939,7 @@ function renderLog() {
   mount('logArea',
     h('section', { class: 'card' },
       h('h2', { class: 'card-title' }, '기록 보내기'),
-      h('p', { class: 'hint' }, '판매점마다 확인한 결과(판매점ID·사진·줄·판정)가 이 휴대폰에만 쌓입니다. [기록 보내기]를 누르면 안 보낸 기록을 zip 파일 하나(약 20MB까지)로 묶어 카카오톡·메일 등으로 보냅니다. 받은 파일은 PC 대시보드 [기록 파일 올리기]로 넣습니다.'),
+      h('p', { class: 'hint' }, '판매점마다 확인한 결과(판매점ID·사진·줄·판정)가 이 휴대폰에만 쌓입니다. [기록 보내기]를 누르면 안 보낸 기록을 zip 파일 하나(약 20MB까지)로 묶고 IRMS만 열 수 있게 암호화해 카카오톡·메일 등으로 보냅니다. 받은 파일은 PC 대시보드 [기록 파일 올리기]로 넣습니다.'),
       h('dl', { class: 'kv' }, h('dt', {}, '안 보낸 기록'), h('dd', {}, `${unsent.length}건`), h('dt', {}, '모든 기록'), h('dd', {}, `${S.logEntries.length}건 · ${(total / 1048576).toFixed(1)}MB`)),
       h('button', { type: 'button', class: 'btn btn-primary btn-block', disabled: !unsent.length, onclick: exportLog }, `기록 보내기 (${unsent.length}건)`),
       h('p', { class: 'hint' }, '위치정보는 넣지 않습니다. 기록은 최근 200건까지 남고, 넘으면 보낸 기록부터 오래된 차례로 지웁니다.')),
@@ -957,7 +957,13 @@ async function exportLog() {
     for (const [name, blob] of Object.entries(e.files || {})) files[name] = new Uint8Array(await blob.arrayBuffer());
     entries.push({ id: e.id, record: e.record, files });
   }
-  const bundle = R.buildBundle({ entries, remaining, device: S.device, app: appInfo(), user: S.binding ? B.bindingRecordJson(S.binding, nowSec()) : null, now: Date.now() });
+  let bundle;
+  try {
+    bundle = await R.buildSealedBundle({ entries, remaining, device: S.device, app: appInfo(), user: S.binding ? B.bindingRecordJson(S.binding, nowSec()) : null, now: Date.now() }, RECORD_PUBLIC_KEY_BASE64);
+  } catch (e) {
+    toast(e && e.message === R.NO_RECORD_KEY ? R.NO_RECORD_KEY : `기록을 암호화하지 못해 보내지 않았습니다: ${(e && e.message) || e}`);
+    return;
+  }
   const file = new File([bundle.bytes], bundle.name, { type: 'application/zip' });
   let shared = false;
   try {
