@@ -1,0 +1,52 @@
+{
+ "schema": "irms-wins-public/1",
+ "key_id": "f7a26716790f5ff5",
+ "package_id": "661c0fd1854e866bf3ac1a8ddae4cee59b69781c76037c2bad7a61153d049b4f",
+ "generated_at": "2026-10-20T14:09:06",
+ "store_count": 14100,
+ "groups": [
+  {
+   "code": "L1",
+   "first_draw_no": 2,
+   "last_draw_no": 1244,
+   "last_draw_date": "2026-10-03"
+  },
+  {
+   "code": "L2",
+   "first_draw_no": 2,
+   "last_draw_no": 1244,
+   "last_draw_date": "2026-10-03"
+  },
+  {
+   "code": "L3",
+   "first_draw_no": 520,
+   "last_draw_no": 1245,
+   "last_draw_date": "2026-10-10"
+  },
+  {
+   "code": "P1",
+   "first_draw_no": 1,
+   "last_draw_no": 335,
+   "last_draw_date": "2026-10-01"
+  },
+  {
+   "code": "P2",
+   "first_draw_no": 1,
+   "last_draw_no": 335,
+   "last_draw_date": "2026-10-01"
+  },
+  {
+   "code": "PB",
+   "first_draw_no": 1,
+   "last_draw_no": 335,
+   "last_draw_date": "2026-10-01"
+  }
+ ],
+ "file": "irms-wins-661c0fd1854e866b.enc",
+ "file_size": 1461551,
+ "sha256": "ec656e8dc41ac53224b01ddd880d107587994f91267a581cdf29ef5789eff950",
+ "signature": {
+  "algorithm": "ECDSA_P256_SHA256",
+  "value": "MEQCIDzWyZQlRVQf0j4B4r68N91OgD4O6ofrrhgIbA9kiDu6AiAx79Nqc8lXX+iTU4lc3LeRELYTPLVNqr0XdE5FrTgSHw=="
+ }
+}
