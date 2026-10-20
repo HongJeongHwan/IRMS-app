@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d4f91">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="당첨 확인">
+<meta name="format-detection" content="telephone=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self' https://generativelanguage.googleapis.com; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<title>당첨 확인</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>당첨 확인</h1>
+  <span id="topVersion" class="topbar-version"></span>
+</header>
+
+<div id="updateBar" class="update-bar" hidden>
+  <span>새 버전이 있습니다</span>
+  <button type="button" id="updateReload" class="btn btn-small btn-on-dark">새로 고침</button>
+</div>
+
+<div id="installBar" class="install-bar" hidden></div>
+
+<main id="main">
+  <section id="tab-check" class="tab-panel">
+    <div id="userCard"></div>
+    <div id="dataCard"></div>
+    <div id="checkBody">
+      <section class="card">
+        <h2 class="step"><span class="step-no">1</span>판매점</h2>
+        <label class="field-label" for="storeInput">판매점ID 8자리 또는 상호</label>
+        <input id="storeInput" class="input" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="예: 11100004 또는 행운복권방" enterkeyhint="search">
+        <p class="hint">숫자면 판매점ID, 글자가 들어 있으면 상호로 찾습니다.</p>
+        <div id="storeArea"></div>
+      </section>
+
+      <section class="card" id="winCard">
+        <h2 class="step"><span class="step-no">2</span>당첨 기록</h2>
+        <div class="photo-buttons">
+          <label class="btn btn-primary file-btn">사진 찍기<input id="photoCamera" type="file" accept="image/*" capture="environment" hidden></label>
+          <label class="btn file-btn">사진 고르기<input id="photoPick" type="file" accept="image/*" multiple hidden></label>
+        </div>
+        <p id="photoHint" class="hint"></p>
+        <div id="photoArea"></div>
+
+        <h3 class="sub">줄 넣기</h3>
+        <form id="addForm" class="add-form" autocomplete="off">
+          <div class="add-grid">
+            <label><span class="field-label">상품</span>
+              <select id="addProduct" class="input">
+                <option value="LOTTO645">로또 6/45</option>
+                <option value="PENSION720">연금720+</option>
+                <option value="PENSION520">연금520</option>
+                <option value="SPEETTO">스피또</option>
+                <option value="UNKNOWN">상품 모름</option>
+              </select></label>
+            <label><span class="field-label">등위</span>
+              <select id="addRank" class="input">
+                <option value="1">1등</option><option value="2">2등</option><option value="3">3등</option>
+                <option value="4">4등</option><option value="5">5등</option><option value="BONUS">보너스</option><option value="">등위 모름</option>
+              </select></label>
+            <label><span class="field-label" id="addDrawLabel">회차</span>
+              <input id="addDraw" class="input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="1177"></label>
+            <label><span class="field-label" id="addCountLabel">명수</span>
+              <input id="addCount" class="input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="모름"></label>
+          </div>
+          <label class="check-line"><input id="addCumulative" type="checkbox"> 회차 없는 누적 횟수(「1등 8번 당첨」)</label>
+          <button type="submit" class="btn btn-primary btn-block">줄 더하기</button>
+        </form>
+        <p id="addError" class="error-text" role="alert"></p>
+
+        <div id="rowsArea"></div>
+      </section>
+
+      <div class="actions-bottom">
+        <button type="button" id="nextStore" class="btn btn-block">다른 판매점 확인</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-log" class="tab-panel" hidden>
+    <div id="logArea"></div>
+  </section>
+
+  <section id="tab-settings" class="tab-panel" hidden>
+    <div id="settingsArea"></div>
+  </section>
+</main>
+
+<nav class="tabbar" role="tablist">
+  <button type="button" role="tab" data-tab="check" class="tab active" aria-selected="true">당첨 확인</button>
+  <button type="button" role="tab" data-tab="log" class="tab" aria-selected="false">기록 보내기<span id="logBadge" class="tab-badge" hidden></span></button>
+  <button type="button" role="tab" data-tab="settings" class="tab" aria-selected="false">설정</button>
+</nav>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle" class="modal-title"></h2>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div id="viewer" class="viewer" hidden>
+  <div class="viewer-scroll" id="viewerScroll"><img id="viewerImg" alt="당첨 기록 사진"></div>
+  <button type="button" id="viewerClose" class="btn btn-small viewer-close">닫기</button>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="vendor/jsQR.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

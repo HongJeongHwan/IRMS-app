@@ -1,0 +1,16 @@
+{
+  "name": "IRMS 당첨 확인",
+  "short_name": "당첨 확인",
+  "description": "복권 판매점 당첨 기록을 IRMS 당첨 자료와 맞춰 보는 현장점검용 웹앱",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f5f8",
+  "theme_color": "#1d4f91",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
