@@ -1,21 +1,21 @@
 {
  "schema": "irms-wins-public/1",
  "key_id": "f7a26716790f5ff5",
- "package_id": "492a96e1078ac9a1663a92c2c041a2b581ae6376d4677e4fa35c341f537440e2",
- "generated_at": "2026-11-10T13:47:18",
+ "package_id": "45d2de818853b9d6f527ddff1c888cb341b20a6d04615baa5716d36129ebc8d1",
+ "generated_at": "2026-11-16T08:00:16",
  "store_count": 14107,
  "groups": [
   {
    "code": "L1",
    "first_draw_no": 2,
-   "last_draw_no": 1249,
-   "last_draw_date": "2026-11-07"
+   "last_draw_no": 1250,
+   "last_draw_date": "2026-11-14"
   },
   {
    "code": "L2",
    "first_draw_no": 2,
-   "last_draw_no": 1249,
-   "last_draw_date": "2026-11-07"
+   "last_draw_no": 1250,
+   "last_draw_date": "2026-11-14"
   },
   {
    "code": "L3",
@@ -42,11 +42,11 @@
    "last_draw_date": "2026-11-05"
   }
  ],
- "file": "irms-wins-492a96e1078ac9a1.enc",
- "file_size": 1468595,
- "sha256": "cc38f5212e03c6c4e30ec371d0196f74fa73ed4b90fe213dcbd0ddecc8a470d2",
+ "file": "irms-wins-45d2de818853b9d6.enc",
+ "file_size": 1468817,
+ "sha256": "1a7108ca9b44f5993fc8b8b240b8935286f8210abf47e56da8041373640f4862",
  "signature": {
   "algorithm": "ECDSA_P256_SHA256",
-  "value": "MEQCIHDwJD5F4X5Ll/4v2m07zDKfb9NShVpIGYjgH0s70ubsAiBiTz8beeNQqMZnIqkSU5NlLFZ5leq7OtGHHfsYximMlg=="
+  "value": "MEUCIQDNc0vvcHVBDk6tVMEmvXimrjUSqfj+2EaR4owH1jEaTQIgNnnIouwIwUmRViGu4GHM57vXZ+Xn0zp+W8GDHsBaZJ4="
  }
 }
