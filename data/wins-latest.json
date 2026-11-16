@@ -1,9 +1,9 @@
 {
  "schema": "irms-wins-public/1",
  "key_id": "f7a26716790f5ff5",
- "package_id": "45d2de818853b9d6f527ddff1c888cb341b20a6d04615baa5716d36129ebc8d1",
- "generated_at": "2026-11-16T08:00:16",
- "store_count": 14107,
+ "package_id": "619bf92a36c41c075c51ed41d643505ed5747d967e0a29eed6fc13c1c540cb91",
+ "generated_at": "2026-11-17T08:28:55",
+ "store_count": 14109,
  "groups": [
   {
    "code": "L1",
@@ -20,33 +20,33 @@
   {
    "code": "L3",
    "first_draw_no": 520,
-   "last_draw_no": 1249,
-   "last_draw_date": "2026-11-07"
+   "last_draw_no": 1250,
+   "last_draw_date": "2026-11-14"
   },
   {
    "code": "P1",
    "first_draw_no": 1,
-   "last_draw_no": 340,
-   "last_draw_date": "2026-11-05"
+   "last_draw_no": 341,
+   "last_draw_date": "2026-11-12"
   },
   {
    "code": "P2",
    "first_draw_no": 1,
-   "last_draw_no": 340,
-   "last_draw_date": "2026-11-05"
+   "last_draw_no": 341,
+   "last_draw_date": "2026-11-12"
   },
   {
    "code": "PB",
    "first_draw_no": 1,
-   "last_draw_no": 340,
-   "last_draw_date": "2026-11-05"
+   "last_draw_no": 341,
+   "last_draw_date": "2026-11-12"
   }
  ],
- "file": "irms-wins-45d2de818853b9d6.enc",
- "file_size": 1468817,
- "sha256": "1a7108ca9b44f5993fc8b8b240b8935286f8210abf47e56da8041373640f4862",
+ "file": "irms-wins-619bf92a36c41c07.enc",
+ "file_size": 1470324,
+ "sha256": "384c182ca4b12e0d172e8431d6a980575f219a7f5ac91cb22c382ad41f16c77f",
  "signature": {
   "algorithm": "ECDSA_P256_SHA256",
-  "value": "MEUCIQDNc0vvcHVBDk6tVMEmvXimrjUSqfj+2EaR4owH1jEaTQIgNnnIouwIwUmRViGu4GHM57vXZ+Xn0zp+W8GDHsBaZJ4="
+  "value": "MEUCIDRVg5tKgSoU87DED+jvkWA7dqi0uiHlaQGIhb0Cp7vOAiEAyVUeJXWLwYBCWZyVNdRLfC6druJMFHaiMJKjorW85N8="
  }
 }
