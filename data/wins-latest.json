@@ -1,8 +1,8 @@
 {
  "schema": "irms-wins-public/1",
  "key_id": "f7a26716790f5ff5",
- "package_id": "619bf92a36c41c075c51ed41d643505ed5747d967e0a29eed6fc13c1c540cb91",
- "generated_at": "2026-11-17T08:28:55",
+ "package_id": "f15a8fd5973aedc6d1747314521656172bf1f19e3aeb24f604f6d5ae4f707f05",
+ "generated_at": "2026-11-20T08:00:14",
  "store_count": 14109,
  "groups": [
   {
@@ -38,15 +38,15 @@
   {
    "code": "PB",
    "first_draw_no": 1,
-   "last_draw_no": 341,
-   "last_draw_date": "2026-11-12"
+   "last_draw_no": 342,
+   "last_draw_date": "2026-11-19"
   }
  ],
- "file": "irms-wins-619bf92a36c41c07.enc",
- "file_size": 1470324,
- "sha256": "384c182ca4b12e0d172e8431d6a980575f219a7f5ac91cb22c382ad41f16c77f",
+ "file": "irms-wins-f15a8fd5973aedc6.enc",
+ "file_size": 1470350,
+ "sha256": "50ac785cfe757e364cc2db02a9e8d014ebc98b7694a379d2f5e1855e411c557d",
  "signature": {
   "algorithm": "ECDSA_P256_SHA256",
-  "value": "MEUCIDRVg5tKgSoU87DED+jvkWA7dqi0uiHlaQGIhb0Cp7vOAiEAyVUeJXWLwYBCWZyVNdRLfC6druJMFHaiMJKjorW85N8="
+  "value": "MEQCIHsSfxf6wLUyEw8C4eC3zyaYXboorDeLPS9wD4Ndk7RsAiAdecnvHb78vEJMnWBsaMpCKahcPKq6SshynkQEXb48wg=="
  }
 }
