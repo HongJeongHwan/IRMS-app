@@ -1,9 +1,9 @@
 {
  "schema": "irms-wins-public/1",
  "key_id": "f7a26716790f5ff5",
- "package_id": "f6ee85bd9a6bc65a6e9cde43395b4eda8b2db4159d79a9ee487050d68cac335d",
- "generated_at": "2026-11-24T07:28:49",
- "store_count": 14109,
+ "package_id": "1bfc2dde21799d877fb61a894fd4217e45a0621738af32a93a279a50ed486e47",
+ "generated_at": "2026-11-24T09:35:07",
+ "store_count": 14110,
  "groups": [
   {
    "code": "L1",
@@ -20,20 +20,20 @@
   {
    "code": "L3",
    "first_draw_no": 520,
-   "last_draw_no": 1250,
-   "last_draw_date": "2026-11-14"
+   "last_draw_no": 1251,
+   "last_draw_date": "2026-11-21"
   },
   {
    "code": "P1",
    "first_draw_no": 1,
-   "last_draw_no": 341,
-   "last_draw_date": "2026-11-12"
+   "last_draw_no": 342,
+   "last_draw_date": "2026-11-19"
   },
   {
    "code": "P2",
    "first_draw_no": 1,
-   "last_draw_no": 341,
-   "last_draw_date": "2026-11-12"
+   "last_draw_no": 342,
+   "last_draw_date": "2026-11-19"
   },
   {
    "code": "PB",
@@ -42,11 +42,11 @@
    "last_draw_date": "2026-11-19"
   }
  ],
- "file": "irms-wins-f6ee85bd9a6bc65a.enc",
- "file_size": 1470532,
- "sha256": "8cf772eefc4462636ff21bb4489e91f842a1c6fea2069e682b6929c79cc835f4",
+ "file": "irms-wins-1bfc2dde21799d87.enc",
+ "file_size": 1472004,
+ "sha256": "c8b4de9c18617b5f55e91973722bec0c5d8e66f69386bb07b5df6458ef935fc1",
  "signature": {
   "algorithm": "ECDSA_P256_SHA256",
-  "value": "MEYCIQC56p0AEZVzBtQSU98peE3pJ/H8U0LYaQANv29YQYRhwwIhAIAfi92NUT74g98ISwbLdBkGK7ooSTl0WZuXa7SSTdqv"
+  "value": "MEYCIQCa1g1x6t9C63LOk83f72JRq5VI9CSLK5huzcCk/9rJOwIhAIhbn3ILwLpdvtzCB8YwIQ5GoQRRFGj5/tkjqUpoZ7R6"
  }
 }
